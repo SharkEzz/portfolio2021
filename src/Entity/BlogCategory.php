@@ -7,11 +7,26 @@ use App\Repository\BlogCategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=BlogCategoryRepository::class)
  */
-#[ApiResource]
+#[ApiResource(
+    itemOperations: [
+        'get' => [
+            'normalization_context' => [
+                'groups' => ['category_item_read']
+            ]
+        ],
+        'patch',
+        'delete'],
+    normalizationContext: [
+        'groups' => [
+            'category_read'
+        ]
+    ]
+)]
 class BlogCategory
 {
     /**
@@ -19,16 +34,19 @@ class BlogCategory
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
+    #[Groups(['category_read', 'category_item_read'])]
     private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
+    #[Groups(['post_read', 'category_read', 'category_item_read'])]
     private string $name;
 
     /**
      * @ORM\OneToMany(targetEntity=BlogPost::class, mappedBy="category")
      */
+    #[Groups(['category_item_read'])]
     private Collection $blogPosts;
 
     public function __construct()

@@ -5,11 +5,20 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\BlogPostCommentRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=BlogPostCommentRepository::class)
  */
-#[ApiResource]
+#[ApiResource(
+    collectionOperations: ['post'],
+    itemOperations: ['delete'],
+    normalizationContext: [
+        'groups' => [
+            'comment_read'
+        ]
+    ],
+)]
 class BlogPostComment
 {
     /**
@@ -22,12 +31,16 @@ class BlogPostComment
     /**
      * @ORM\Column(type="string", length=2000)
      */
+    #[Groups(['comment_read'])]
     private string $content;
 
     /**
      * @ORM\Column(type="string", length=15)
      */
     private string $authorIp;
+
+    #[Groups(['comment_read'])]
+    public bool $isEditable = false;
 
     /**
      * @ORM\ManyToOne(targetEntity=BlogPost::class, inversedBy="blogPostComments")

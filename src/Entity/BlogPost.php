@@ -3,15 +3,23 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\BlogPostRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=BlogPostRepository::class)
  */
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: [
+        'groups' => [
+            'post_read'
+        ]
+    ]
+)]
 class BlogPost
 {
     /**
@@ -19,11 +27,13 @@ class BlogPost
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
+    #[Groups(['post_read'])]
     private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
+    #[Groups(['post_read', 'category_item_read'])]
     private string $title;
 
     /**
@@ -34,23 +44,27 @@ class BlogPost
     /**
      * @ORM\Column(type="text")
      */
+    #[Groups(['post_read'])]
     private string $content;
 
     /**
      * @ORM\ManyToOne(targetEntity=BlogCategory::class, inversedBy="blogPosts")
      * @ORM\JoinColumn(nullable=false)
      */
+    #[Groups(['post_read'])]
     private BlogCategory $category;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $imagePath;
+    #[Groups(['post_read', 'category_item_read'])]
+    private ?string $imagePath;
 
     /**
      * @ORM\OneToMany(targetEntity=BlogPostComment::class, mappedBy="blogPost", orphanRemoval=true)
      */
-    private $blogPostComments;
+    #[ApiSubresource]
+    private Collection $blogPostComments;
 
     public function __construct()
     {
@@ -103,7 +117,7 @@ class BlogPost
         return $this->category;
     }
 
-    public function setCategory(?BlogCategory $category): self
+    public function setCategory(BlogCategory $category): self
     {
         $this->category = $category;
 
@@ -123,7 +137,7 @@ class BlogPost
     }
 
     /**
-     * @return Collection|BlogPostComment[]
+     * @return Collection
      */
     public function getBlogPostComments(): Collection
     {
